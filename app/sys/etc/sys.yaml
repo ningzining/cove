@@ -1,0 +1,21 @@
+Name: sys
+Host: 0.0.0.0
+Port: 13000
+Mode: test
+
+Log:
+  Level: "info"
+  Dir: "tmp/logs" # 日志目录
+  Filename: "sys" # 日志文件名
+  MaxSize: 10 # 日志文件最大大小，单位MB，10表示最多10MB
+  MaxAge: 30 # 日志文件最大保存时间，单位天，30表示最多保存30天
+  MaxBackups: 10 # 日志文件最大备份数量，10表示最多备份10个文件
+  Compress: false # 是否压缩日志文件，false表示不压缩
+
+DB:
+  DSN: host=127.0.0.1 port=5432 dbname=cove user=postgres password=123456
+  MaxIdleConnections: 10 # 数据库最大空闲连接数，10表示最多10个空闲连接
+  MaxOpenConnections: 100 # 数据库最大打开连接数，100表示最多100个打开连接
+  MaxConnectionLifeTime: 60 # 数据库连接最大生命周期，单位秒，60表示最多60秒
+  MaxConnectionIdleTime: 60 # 数据库连接最大空闲时间，单位秒，60表示最多60秒
+  LogLevel: 3 # 数据库日志级别，1:Silent,2:Error,3:Warn,4:Info
