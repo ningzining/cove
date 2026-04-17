@@ -21,8 +21,6 @@ func (r *RegisterReq) Generate() *model.User {
 }
 
 type LoginReq struct {
-	Provider string `json:"-"` // 登录方式
-
 	Phone    string `json:"phone" binding:"required,min=6,max=20"`
 	Password string `json:"password" binding:"required,min=6,max=20"`
 }

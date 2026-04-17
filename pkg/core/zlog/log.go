@@ -19,7 +19,7 @@ type Config struct {
 	Level      string // 日志级别: debug/info/warn/error/fatal/panic
 }
 
-func Init(config *Config) error {
+func Setup(config *Config) error {
 	// 初始化日志目录
 	if config.Dir != "" {
 		err := os.MkdirAll(config.Dir, 0755)

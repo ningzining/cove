@@ -1,0 +1,60 @@
+definitions:
+  dto.LoginReq:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 6
+        type: string
+      phone:
+        maxLength: 20
+        minLength: 6
+        type: string
+    required:
+    - password
+    - phone
+    type: object
+  dto.LoginResp:
+    properties:
+      token:
+        description: 登录token
+        type: string
+    type: object
+  response.response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/login:
+    post:
+      consumes:
+      - application/json
+      description: 登录用户
+      parameters:
+      - description: 登录请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.LoginResp'
+              type: object
+      summary: 登录
+      tags:
+      - Auth
+swagger: "2.0"

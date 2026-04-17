@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/ningzining/cove/app/sys/cmd"
+	_ "github.com/ningzining/cove/app/sys/docs"
 )
 
 func main() {

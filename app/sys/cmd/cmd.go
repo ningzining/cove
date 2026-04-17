@@ -18,6 +18,13 @@ func Execute() error {
 		Short: "System Server",
 		// 命令出错时，不打印帮助信息。设置为 true 可以确保命令出错时一眼就能看到错误信息
 		SilenceUsage: true,
+		// 指定调用 cmd.Execute() 时，执行的 PreRun 函数
+		// 该函数会在 Run 函数执行前执行
+		PreRun: func(cmd *cobra.Command, args []string) {
+			if configFile == "" {
+				configFile = "etc/auth.yaml"
+			}
+		},
 		// 指定调用 cmd.Execute() 时，执行的 Run 函数
 		Run: func(cmd *cobra.Command, args []string) {
 			run()
@@ -31,10 +38,13 @@ func Execute() error {
 func run() {
 	c := &config.Config{}
 	conf.MustLoad(configFile, c)
-	zlog.Init(&c.Log)
+	err := zlog.Setup(&c.Log)
+	if err != nil {
+		panic(err)
+	}
 
 	server := rest.MustNewServer(&c.Config)
-	router.MustRegister(server.Engine(), c)
+	router.MustSetup(server.Engine(), c)
 
 	server.Start()
 }

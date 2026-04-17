@@ -125,8 +125,8 @@ var LogFormatter = func(param LogFormatterParams) string {
 	if param.Latency > time.Minute {
 		param.Latency = param.Latency.Truncate(time.Second)
 	}
-	return fmt.Sprintf("[Logger] %v | %3d | %13v | %15s | %-7s %#v\n%s",
-		param.TimeStamp.Format(time.DateTime),
+	return fmt.Sprintf("%v | %3d | %13v | %15s | %-7s %#v\n%s",
+		param.TimeStamp.Format("2006-01-02 15:04:05.000"),
 		param.StatusCode,
 		param.Latency,
 		param.ClientIP,

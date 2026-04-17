@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/ningzining/cove/pkg/rest/middleware"
 	"github.com/rs/zerolog/log"
@@ -17,20 +16,18 @@ type Server struct {
 	srv    *http.Server
 }
 
-func MustNewServer(c *Config) *Server {
-	return NewServer(c)
+func MustNewServer(cfg *Config) *Server {
+	return NewServer(cfg)
 }
 
-func NewServer(c *Config) *Server {
-	gin.SetMode(c.Mode)
+func NewServer(cfg *Config) *Server {
+	gin.SetMode(cfg.Mode)
 	// 创建gin引擎
 	engine := gin.New()
 	// 安装中间件
 	middleware.Setup(engine)
-	// 注册pprof路由
-	pprof.Register(engine)
 
-	return &Server{config: c, engine: engine}
+	return &Server{config: cfg, engine: engine}
 }
 
 func (s *Server) Engine() *gin.Engine {

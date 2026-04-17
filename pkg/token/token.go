@@ -12,7 +12,6 @@ type Config struct {
 }
 
 type CustomMapClaims struct {
-	Provider string `json:"provider"` // 登录方式
 	UserID   string `json:"user_id"`  // 用户ID
 	Phone    string `json:"phone"`    // 手机号
 	Nickname string `json:"nickname"` // 昵称

@@ -9,7 +9,6 @@ import (
 
 func TestGenerate(t *testing.T) {
 	claims := &CustomMapClaims{
-		Provider: "test",
 		UserID:   "019d95b9add77b51bd74343017291392",
 		Phone:    "13800000001",
 		Nickname: "普通用户",

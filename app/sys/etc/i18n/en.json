@@ -2,10 +2,12 @@
     "100000": "Internal server error",
     "100001": "Parameter binding exception",
     "100002": "Invalid parameter exception",
-    "100003": "Database operation exception",
-    "100004": "Token signature exception",
-    "100005": "Invalid token",
-    "100006": "Token expired exception",
-    "100007": "Unauthorized exception",
-    "100008": "Forbidden exception"
+    "100003": "Database operation exception, please contact administrator to resolve",
+    "100004": "Token signature exception, please login again later",
+    "100005": "Invalid token, please login again later",
+    "100006": "Token expired exception, please login again later",
+    "100007": "Unauthorized exception, please login again later",
+    "100008": "Forbidden exception, please contact administrator to get permission",
+    "101000": "Phone or password error, please login again later",
+    "101001": "Account disabled, please contact administrator to enable"
 }

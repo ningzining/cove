@@ -2,30 +2,90 @@ package router
 
 import (
 	"errors"
+	"net/http"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/ningzining/cove/app/sys/internal/config"
 	"github.com/ningzining/cove/app/sys/internal/handler"
 	"github.com/ningzining/cove/app/sys/internal/service"
 	"github.com/ningzining/cove/app/sys/internal/svc"
+	"github.com/ningzining/cove/pkg/core/casbin"
 	"github.com/ningzining/cove/pkg/model"
-	"github.com/ningzining/cove/pkg/rbac"
 	"github.com/ningzining/cove/pkg/rest/middleware"
 	"github.com/ningzining/cove/pkg/rest/response"
 	"github.com/ningzining/cove/pkg/store"
 	"github.com/rs/zerolog/log"
+	swaggerfiles "github.com/swaggo/files"
+	ginswagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
-func MustRegister(r *gin.Engine, c *config.Config) {
-	r.GET("/healthz", func(ctx *gin.Context) {
+func MustSetup(r *gin.Engine, cfg *config.Config) {
+	db := store.MustNew(&cfg.DB)
+	// 初始化数据库
+	initDatabase(db)
+	// 初始化casbin
+	if err := casbin.Setup(db); err != nil {
+		log.Fatal().Err(err).Msg("init casbin failed")
+	}
+
+	// 注册路由组
+	g := r.Group("")
+	// 注册系统路由
+	setupSysRouter(g)
+	// 注册业务路由
+	setupBizRouter(g, cfg, db)
+}
+
+// setupSysRouter 注册系统路由
+func setupSysRouter(g *gin.RouterGroup) {
+	// 注册pprof路由
+	pprof.Register(g)
+	// 注册健康检查路由
+	g.GET("/healthz", func(ctx *gin.Context) {
 		log.Info().Msg("healthz function called")
 		response.OK(ctx, nil)
 	})
+	// 仅在开发模式下 注册swagger路由
+	if gin.Mode() != gin.ReleaseMode {
+		g.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.NewHandler()))
+	}
+	// 注册静态文件路由
+	g.Static("/static", "./static")
+}
 
-	ctx := svc.NewContext(c)
-	db := store.MustNew(&c.DB)
+// setupBizRouter 注册业务路由
+func setupBizRouter(g *gin.RouterGroup, cfg *config.Config, db *gorm.DB) {
+	ctx := svc.NewContext(cfg)
+	authService := service.NewAuth(db, ctx)
+	authHandler := handler.NewAuth(authService)
 
+	{
+		v1 := g.Group("/api/v1")
+		v1.POST("/login", authHandler.Login)
+	}
+
+	{
+		v1 := g.Group("/api/v1")
+		v1.Use(middleware.AuthN(&cfg.Jwt))
+		registerRouter(ResourceAction{Resource: ResourceUser, Action: ActionRead}, v1, http.MethodGet, "/user", func(c *gin.Context) {
+			response.OK(c, gin.H{"message": "用户列表"})
+		})
+		registerRouter(ResourceAction{Resource: ResourceUser, Action: ActionCreate}, v1, http.MethodPost, "/user", func(c *gin.Context) {
+			response.OK(c, gin.H{"message": "创建用户"})
+		})
+	}
+}
+
+func initDatabase(db *gorm.DB) {
+	migrate(db)
+	initResources(db)
+	initRoles(db)
+	initUsers(db)
+}
+
+func migrate(db *gorm.DB) {
 	if err := db.AutoMigrate(
 		&model.User{},
 		&model.Role{},
@@ -35,48 +95,12 @@ func MustRegister(r *gin.Engine, c *config.Config) {
 	); err != nil {
 		log.Fatal().Err(err).Msg("auto migrate failed")
 	}
-
-	initDefaultData(db)
-
-	if err := rbac.Init(db); err != nil {
-		log.Fatal().Err(err).Msg("init casbin failed")
-	}
-
-	rbac.BatchRegisterRoutes(rbac.GetDefaultRouteMappings())
-	middleware.SetTokenConfig(&c.Jwt)
-
-	authService := service.NewAuth(db, ctx)
-	authHandler := handler.NewAuth(authService)
-
-	public := r.Group("/api/v1")
-	{
-		public.POST("/login", authHandler.Login)
-		public.POST("/register", authHandler.Register)
-	}
-
-	protected := r.Group("/api/v1")
-	protected.Use(middleware.Auth(), middleware.RBAC())
-	{
-		protected.GET("/users", func(c *gin.Context) {
-			response.OK(c, gin.H{"message": "用户列表"})
-		})
-		protected.POST("/users", func(c *gin.Context) {
-			response.OK(c, gin.H{"message": "创建用户"})
-		})
-	}
-
-}
-
-func initDefaultData(db *gorm.DB) {
-	initResources(db)
-	initRoles(db)
-	initUsers(db)
 }
 
 func initResources(db *gorm.DB) {
 	resources := []model.Resource{
-		{Code: rbac.ResourceRole, Name: "角色管理", Actions: []string{rbac.ActionCreate, rbac.ActionRead, rbac.ActionUpdate, rbac.ActionDelete}},
-		{Code: rbac.ResourceUser, Name: "用户管理", Actions: []string{rbac.ActionCreate, rbac.ActionRead, rbac.ActionUpdate, rbac.ActionDelete}},
+		{Code: ResourceRole, Name: "角色管理", Actions: []string{ActionCreate, ActionRead, ActionUpdate, ActionDelete}},
+		{Code: ResourceUser, Name: "用户管理", Actions: []string{ActionCreate, ActionRead, ActionUpdate, ActionDelete}},
 	}
 	for _, res := range resources {
 		var count int64

@@ -12,7 +12,6 @@ var (
 	ErrUnauthorized = 100007 // 未认证错误码
 	ErrForbidden    = 100008 // 未授权错误码
 
-	ErrPhoneExist   = 101000 // 手机号已存在错误码
-	ErrLoginFailed  = 101001 // 登录失败错误码
-	ErrUserDisabled = 101002 // 用户已禁用错误码
+	ErrLoginFailed     = 101000 // 登录失败错误码
+	ErrAccountDisabled = 101001 // 账号已禁用错误码
 )
