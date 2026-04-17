@@ -4,8 +4,8 @@ import (
 	"github.com/ningzining/cove/app/sys/internal/config"
 	"github.com/ningzining/cove/app/sys/internal/router"
 	"github.com/ningzining/cove/pkg/core/conf"
+	"github.com/ningzining/cove/pkg/core/zlog"
 	"github.com/ningzining/cove/pkg/rest"
-	"github.com/ningzining/zlog"
 	"github.com/spf13/cobra"
 )
 

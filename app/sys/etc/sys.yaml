@@ -9,7 +9,7 @@ Jwt:
 
 Log:
   Level: "info"
-  Dir: "tmp/logs" # 日志目录
+  Dir: "" # 日志目录（为空则输出到控制台）
   Filename: "sys" # 日志文件名
   MaxSize: 10 # 日志文件最大大小，单位MB，10表示最多10MB
   MaxAge: 30 # 日志文件最大保存时间，单位天，30表示最多保存30天

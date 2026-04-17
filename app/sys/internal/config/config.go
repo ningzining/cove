@@ -1,10 +1,10 @@
 package config
 
 import (
+	"github.com/ningzining/cove/pkg/core/zlog"
 	"github.com/ningzining/cove/pkg/rest"
 	"github.com/ningzining/cove/pkg/store"
 	"github.com/ningzining/cove/pkg/token"
-	"github.com/ningzining/zlog"
 )
 
 type Config struct {
