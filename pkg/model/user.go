@@ -1,11 +1,22 @@
 package model
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+)
+
+const (
+	AdminNickname = "管理员"         // 管理员昵称
+	AdminPhone    = "13800000000" // 管理员手机号
+
+	NormalUserNickname = "普通用户"        // 普通用户昵称
+	NormalUserPhone    = "13800000001" // 普通用户手机号
+
+	DefaultPassword = "Cove@123456" // 默认密码
 )
 
 type EnabledStatus int8
@@ -16,10 +27,10 @@ const (
 )
 
 type User struct {
-	ID        int64          `json:"-" gorm:"primaryKey"`
+	ID        int64          `json:"-" gorm:"autoIncrement;primaryKey"`
 	UserID    string         `json:"user_id" gorm:"varchar(36);unique;not null;comment:用户ID"`
 	Nickname  string         `json:"nickname" gorm:"varchar(255);not null;comment:昵称"`
-	Phone     string         `json:"phone" gorm:"varchar(20);unique;not null;comment:手机号"`
+	Phone     string         `json:"phone" gorm:"varchar(20);not null;comment:手机号"`
 	Password  string         `json:"-" gorm:"varchar(255);not null;comment:密码"`
 	Email     string         `json:"email" gorm:"varchar(255);comment:邮箱"`
 	Status    EnabledStatus  `json:"status" gorm:"not null;default:1;comment:状态,1:启用,2:禁用"`
@@ -37,14 +48,12 @@ func (u *User) TableName() string {
 }
 
 func (u *User) BeforeCreate(_ *gorm.DB) error {
-	// 生成用户ID
 	uid, err := uuid.NewV7()
 	if err != nil {
 		return err
 	}
-	u.UserID = uid.String()
+	u.UserID = strings.ReplaceAll(uid.String(), "-", "")
 
-	// 加密密码
 	if err := u.Encrypt(); err != nil {
 		return err
 	}
@@ -53,7 +62,6 @@ func (u *User) BeforeCreate(_ *gorm.DB) error {
 }
 
 func (u *User) BeforeUpdate(_ *gorm.DB) error {
-	// 加密密码
 	if err := u.Encrypt(); err != nil {
 		return err
 	}
@@ -65,7 +73,6 @@ func (u *User) Encrypt() error {
 		return nil
 	}
 
-	// 加密密码
 	var hash []byte
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {

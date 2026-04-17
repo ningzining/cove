@@ -2,3 +2,4 @@
 .vscode/
 */*/tmp/
 */*/etc/*.local.yaml
+**/cove-sys

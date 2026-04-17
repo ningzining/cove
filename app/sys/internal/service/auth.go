@@ -8,6 +8,7 @@ import (
 	"github.com/ningzining/cove/app/sys/internal/service/dto"
 	"github.com/ningzining/cove/app/sys/internal/svc"
 	"github.com/ningzining/cove/pkg/model"
+	"github.com/ningzining/cove/pkg/rbac"
 	"github.com/ningzining/cove/pkg/token"
 	"github.com/ningzining/cove/pkg/xerr"
 	"github.com/rs/zerolog/log"
@@ -41,29 +42,27 @@ func (a *Auth) Login(req *dto.LoginReq) (*dto.LoginResp, error) {
 			Msg("login: db error")
 		return nil, xerr.New(xerr.ErrDB)
 	}
-	// 校验密码
 	if ok, err := a.compareHashAndPassword(user.Password, req.Password); !ok || err != nil {
 		log.Error().
 			Str("phone", req.Phone).
 			Msg("login: invalid password")
 		return nil, xerr.New(xerr.ErrLoginFailed)
 	}
-	// 校验用户状态
 	if !user.Enabled() {
 		log.Warn().
-			Int64("user_id", user.ID).
+			Int64("id", user.ID).
+			Str("user_id", user.UserID).
 			Str("phone", req.Phone).
 			Msg("login: user disabled")
 		return nil, xerr.New(xerr.ErrUserDisabled)
 	}
-	// 生成token
 	now := time.Now()
 	claims := token.CustomMapClaims{
 		Provider: req.Provider,
-		UserID:   user.ID,
+		UserID:   user.UserID,
 		Phone:    user.Phone,
 		Nickname: user.Nickname,
-		Claims: jwt.RegisteredClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(a.ctx.Config.Jwt.ExpireTime))),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    a.ctx.Config.Name,
@@ -73,7 +72,7 @@ func (a *Auth) Login(req *dto.LoginReq) (*dto.LoginResp, error) {
 	if err != nil {
 		log.Error().
 			Err(err).
-			Int64("user_id", user.ID).
+			Str("user_id", user.UserID).
 			Msg("login: failed to generate token")
 		return nil, xerr.New(xerr.ErrTokenSign)
 	}
@@ -85,7 +84,6 @@ func (a *Auth) Login(req *dto.LoginReq) (*dto.LoginResp, error) {
 
 func (a *Auth) Register(req *dto.RegisterReq) error {
 	var existCount int64
-	// 校验手机号是否已存在
 	if err := a.DB.Model(&model.User{}).Where("phone = ?", req.Phone).Count(&existCount).Error; err != nil {
 		log.Error().Err(err).Msg("Register err")
 		return xerr.New(xerr.ErrDB)
@@ -97,6 +95,27 @@ func (a *Auth) Register(req *dto.RegisterReq) error {
 	user := req.Generate()
 	if err := a.DB.Create(user).Error; err != nil {
 		log.Error().Err(err).Msg("Register err")
+		return xerr.New(xerr.ErrDB)
+	}
+
+	// 给新用户分配默认角色 - Casbin
+	if _, err := rbac.AddRoleForUser(user.UserID, model.RoleUser); err != nil {
+		log.Error().Err(err).Str("user_id", user.UserID).Msg("failed to add default role")
+		return xerr.New(xerr.ErrDB)
+	}
+
+	// 给新用户分配默认角色 - 数据库关联表
+	var role model.Role
+	if err := a.DB.Where("code = ?", model.RoleUser).First(&role).Error; err != nil {
+		log.Error().Err(err).Str("role_code", model.RoleUser).Msg("failed to find role")
+		return xerr.New(xerr.ErrDB)
+	}
+	userRole := model.UserRole{
+		UserID: user.ID,
+		RoleID: role.ID,
+	}
+	if err := a.DB.Create(&userRole).Error; err != nil {
+		log.Error().Err(err).Int64("user_id", user.ID).Int64("role_id", role.ID).Msg("failed to create user role")
 		return xerr.New(xerr.ErrDB)
 	}
 

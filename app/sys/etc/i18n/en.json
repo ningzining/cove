@@ -5,5 +5,7 @@
     "100003": "Database operation exception",
     "100004": "Token signature exception",
     "100005": "Invalid token",
-    "100006": "Token expired exception"
+    "100006": "Token expired exception",
+    "100007": "Unauthorized exception",
+    "100008": "Forbidden exception"
 }

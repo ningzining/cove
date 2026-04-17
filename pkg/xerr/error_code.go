@@ -9,6 +9,8 @@ var (
 	ErrTokenSign    = 100004 // token签名错误码
 	ErrTokenInvalid = 100005 // token无效错误码
 	ErrTokenExpired = 100006 // token过期错误码
+	ErrUnauthorized = 100007 // 未认证错误码
+	ErrForbidden    = 100008 // 未授权错误码
 
 	ErrPhoneExist   = 101000 // 手机号已存在错误码
 	ErrLoginFailed  = 101001 // 登录失败错误码

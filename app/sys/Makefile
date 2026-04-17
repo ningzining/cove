@@ -2,7 +2,7 @@ PROJECT:=cove-sys
 
 # make build: 编译二进制文件
 .PHONY: build
-build: swag
+build:
 	export CGO_ENABLED=0 && \
 	export GOOS=linux && \
 	export GOARCH=amd64 && \

@@ -5,8 +5,8 @@ import (
 )
 
 type RegisterReq struct {
-	Nickname string `json:"nickname" binding:"required,mix=6,max=20"`
-	Phone    string `json:"phone" binding:"required,mix=6,max=20"`
+	Nickname string `json:"nickname" binding:"required,min=6,max=20"`
+	Phone    string `json:"phone" binding:"required,min=6,max=20"`
 	Password string `json:"password" binding:"required,min=6,max=20"`
 	Email    string `json:"email" binding:"required,email"`
 }
@@ -23,7 +23,7 @@ func (r *RegisterReq) Generate() *model.User {
 type LoginReq struct {
 	Provider string `json:"-"` // 登录方式
 
-	Phone    string `json:"phone" binding:"required,mix=6,max=20"`
+	Phone    string `json:"phone" binding:"required,min=6,max=20"`
 	Password string `json:"password" binding:"required,min=6,max=20"`
 }
 

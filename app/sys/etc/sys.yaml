@@ -3,6 +3,10 @@ Host: 0.0.0.0
 Port: 13000
 Mode: test
 
+Jwt:
+  Key: "cove-secret-key-change-in-production"
+  ExpireTime: 86400 # JWT 过期时间，单位秒，86400表示1天
+
 Log:
   Level: "info"
   Dir: "tmp/logs" # 日志目录
