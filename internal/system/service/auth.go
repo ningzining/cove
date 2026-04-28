@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/ningzining/cove/app/sys/internal/service/dto"
-	"github.com/ningzining/cove/app/sys/internal/svc"
+	"github.com/ningzining/cove/internal/system/service/dto"
+	"github.com/ningzining/cove/internal/system/svc"
 	"github.com/ningzining/cove/pkg/model"
 	"github.com/ningzining/cove/pkg/token"
 	"github.com/ningzining/cove/pkg/xerr"

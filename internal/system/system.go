@@ -1,12 +1,14 @@
-package cmd
+package system
 
 import (
-	"github.com/ningzining/cove/app/sys/internal/config"
-	"github.com/ningzining/cove/app/sys/internal/router"
+	"github.com/ningzining/cove/internal/system/config"
+	"github.com/ningzining/cove/internal/system/router"
 	"github.com/ningzining/cove/pkg/core/conf"
 	"github.com/ningzining/cove/pkg/core/zlog"
 	"github.com/ningzining/cove/pkg/rest"
 	"github.com/spf13/cobra"
+
+	_ "github.com/ningzining/cove/internal/system/docs"
 )
 
 var configFile string
@@ -22,7 +24,7 @@ func Execute() error {
 		// 该函数会在 Run 函数执行前执行
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if configFile == "" {
-				configFile = "etc/auth.yaml"
+				configFile = "etc/system.yaml"
 			}
 		},
 		// 指定调用 cmd.Execute() 时，执行的 Run 函数

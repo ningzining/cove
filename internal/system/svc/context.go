@@ -1,6 +1,6 @@
 package svc
 
-import "github.com/ningzining/cove/app/sys/internal/config"
+import "github.com/ningzining/cove/internal/system/config"
 
 type Context struct {
 	Config *config.Config

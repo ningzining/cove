@@ -1,5 +1,6 @@
 .claude/
 .vscode/
-*/*/tmp/
-*/*/etc/*.local.yaml
-**/cove-sys
+**/tmp/
+**/*.local.yaml
+
+/cove-system
