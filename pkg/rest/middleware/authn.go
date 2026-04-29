@@ -30,6 +30,7 @@ func AuthN(cfg *token.Config) gin.HandlerFunc {
 
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			log.Error().Msg("no auth header")
 			response.Error(c, xerr.New(xerr.ErrUnauthorized))
 			c.Abort()
 			return
@@ -37,6 +38,7 @@ func AuthN(cfg *token.Config) gin.HandlerFunc {
 
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
+			log.Error().Msg("invalid auth header")
 			response.Error(c, xerr.New(xerr.ErrUnauthorized))
 			c.Abort()
 			return

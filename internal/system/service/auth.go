@@ -60,7 +60,7 @@ func (a *Auth) Login(req *dto.LoginReq) (*dto.LoginResp, error) {
 		Phone:    user.Phone,
 		Nickname: user.Nickname,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(a.ctx.Config.Jwt.ExpireTime))),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Second * time.Duration(a.ctx.Config.Jwt.ExpireTime))),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    a.ctx.Config.Name,
 		},

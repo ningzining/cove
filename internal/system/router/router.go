@@ -2,7 +2,6 @@ package router
 
 import (
 	"errors"
-	"net/http"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -23,12 +22,12 @@ import (
 
 func MustSetup(r *gin.Engine, cfg *config.Config) {
 	db := store.MustNew(&cfg.DB)
-	// 初始化数据库
-	initDatabase(db)
 	// 初始化casbin
 	if err := casbin.Setup(db); err != nil {
 		log.Fatal().Err(err).Msg("init casbin failed")
 	}
+	// 初始化数据库
+	initDatabase(db)
 
 	// 注册路由组
 	g := r.Group("")
@@ -49,7 +48,7 @@ func setupSysRouter(g *gin.RouterGroup) {
 	})
 	// 仅在开发模式下 注册swagger路由
 	if gin.Mode() != gin.ReleaseMode {
-		g.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.NewHandler()))
+		g.GET("/swagger/system/*any", ginswagger.WrapHandler(swaggerfiles.NewHandler(), ginswagger.InstanceName("system")))
 	}
 	// 注册静态文件路由
 	g.Static("/static", "./static")
@@ -60,21 +59,32 @@ func setupBizRouter(g *gin.RouterGroup, cfg *config.Config, db *gorm.DB) {
 	ctx := svc.NewContext(cfg)
 	authService := service.NewAuth(db, ctx)
 	authHandler := handler.NewAuth(authService)
-
 	{
 		v1 := g.Group("/api/v1")
 		v1.POST("/login", authHandler.Login)
 	}
-
+	{
+		roleService := service.NewRole(db, ctx)
+		roleHandler := handler.NewRole(roleService)
+		{
+			v1 := g.Group("/api/v1/role")
+			v1.Use(middleware.AuthN(&cfg.Jwt))
+			v1.GET("/option", roleHandler.Option)
+		}
+		{
+			v1 := g.Group("/api/v1/role")
+			v1.Use(middleware.AuthN(&cfg.Jwt))
+			v1.POST("", middleware.AuthZ(RoleResource, CreateAction), roleHandler.Create)
+			v1.DELETE("", middleware.AuthZ(RoleResource, DeleteAction), roleHandler.Delete)
+			v1.PUT("/:id", middleware.AuthZ(RoleResource, UpdateAction), roleHandler.Update)
+			v1.GET("/:id", middleware.AuthZ(RoleResource, ReadAction), roleHandler.Get)
+			v1.GET("", middleware.AuthZ(RoleResource, ReadAction), roleHandler.Page)
+			v1.PUT("/:id/status", middleware.AuthZ(RoleResource, UpdateAction), roleHandler.UpdateStatus)
+		}
+	}
 	{
 		v1 := g.Group("/api/v1")
 		v1.Use(middleware.AuthN(&cfg.Jwt))
-		registerRouter(ResourceAction{Resource: ResourceUser, Action: ActionRead}, v1, http.MethodGet, "/user", func(c *gin.Context) {
-			response.OK(c, gin.H{"message": "用户列表"})
-		})
-		registerRouter(ResourceAction{Resource: ResourceUser, Action: ActionCreate}, v1, http.MethodPost, "/user", func(c *gin.Context) {
-			response.OK(c, gin.H{"message": "创建用户"})
-		})
 	}
 }
 
@@ -99,12 +109,14 @@ func migrate(db *gorm.DB) {
 
 func initResources(db *gorm.DB) {
 	resources := []model.Resource{
-		{Code: ResourceRole, Name: "角色管理", Actions: []string{ActionCreate, ActionRead, ActionUpdate, ActionDelete}},
-		{Code: ResourceUser, Name: "用户管理", Actions: []string{ActionCreate, ActionRead, ActionUpdate, ActionDelete}},
+		{Code: RoleResource, Name: "角色管理", Action: model.ReadAction},
+		{Code: RoleResource, Name: "角色管理", Action: model.FullAction},
+		{Code: UserResource, Name: "用户管理", Action: model.ReadAction},
+		{Code: UserResource, Name: "用户管理", Action: model.FullAction},
 	}
 	for _, res := range resources {
 		var count int64
-		if err := db.Model(&model.Resource{}).Where("code = ?", res.Code).Count(&count).Error; err != nil {
+		if err := db.Model(&model.Resource{}).Where("code = ? and action = ?", res.Code, res.Action).Count(&count).Error; err != nil {
 			log.Fatal().Err(err).Msg("count resource failed")
 		}
 		if count == 0 {
@@ -116,11 +128,26 @@ func initResources(db *gorm.DB) {
 }
 
 func initRoles(db *gorm.DB) {
-	createRoleIfNotExists(db, model.RoleAdmin, "管理员")
-	createRoleIfNotExists(db, model.RoleUser, "普通用户")
+	createRoleIfNotExists(db, model.AdminRoleCode, model.AdminRoleName, func() {
+		enforcer := casbin.Enforcer()
+		if enforcer == nil {
+			log.Fatal().Msg("casbin enforcer not initialized")
+			return
+		}
+		enforcer.AddPolicy(model.AdminRoleCode, "*", "*")
+	})
+
+	createRoleIfNotExists(db, model.NormalUserRoleCode, model.NormalUserRoleName, func() {
+		enforcer := casbin.Enforcer()
+		if enforcer == nil {
+			log.Fatal().Msg("casbin enforcer not initialized")
+			return
+		}
+		enforcer.AddPolicy(model.NormalUserRoleCode, "*", ReadAction)
+	})
 }
 
-func createRoleIfNotExists(db *gorm.DB, code, name string) {
+func createRoleIfNotExists(db *gorm.DB, code, name string, policy func()) {
 	var role model.Role
 	if err := db.Where("code = ?", code).First(&role).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -129,13 +156,14 @@ func createRoleIfNotExists(db *gorm.DB, code, name string) {
 			if err := db.Create(&role).Error; err != nil {
 				log.Fatal().Err(err).Str("code", code).Msg("create role failed")
 			}
+			policy()
 		}
 	}
 }
 
 func initUsers(db *gorm.DB) {
-	createUserIfNotExists(db, model.AdminPhone, model.AdminNickname, model.RoleAdmin)
-	createUserIfNotExists(db, model.NormalUserPhone, model.NormalUserNickname, model.RoleUser)
+	createUserIfNotExists(db, model.AdminPhone, model.AdminNickname, model.AdminRoleCode)
+	createUserIfNotExists(db, model.NormalUserPhone, model.NormalUserNickname, model.NormalUserRoleCode)
 }
 
 func createUserIfNotExists(db *gorm.DB, phone string, nickname, roleCode string) {
@@ -158,12 +186,18 @@ func createUserIfNotExists(db *gorm.DB, phone string, nickname, roleCode string)
 				log.Fatal().Err(err).Str("role_code", roleCode).Msg("find role failed")
 			}
 			userRole := model.UserRole{
-				UserID: user.ID,
-				RoleID: role.ID,
+				UserID: user.UserID,
+				RoleID: role.RoleID,
 			}
 			if err := db.Create(&userRole).Error; err != nil {
 				log.Fatal().Err(err).Str("phone", phone).Msg("create user role failed")
 			}
+			enforcer := casbin.Enforcer()
+			if enforcer == nil {
+				log.Fatal().Msg("casbin enforcer not initialized")
+				return
+			}
+			enforcer.AddRoleForUser(user.UserID, roleCode)
 		}
 	}
 }

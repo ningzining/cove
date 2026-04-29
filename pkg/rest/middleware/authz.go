@@ -13,6 +13,7 @@ func AuthZ(resource string, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userClaims, ok := GetClaimsFromContext(c)
 		if !ok {
+			log.Error().Msg("claims not found in context")
 			response.Error(c, xerr.New(xerr.ErrUnauthorized))
 			c.Abort()
 			return

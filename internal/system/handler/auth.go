@@ -19,7 +19,7 @@ func NewAuth(authService *service.Auth) *Auth {
 // Login 登录
 // @Summary 登录
 // @Description 登录用户
-// @Tags Auth
+// @Tags 认证
 // @Accept json
 // @Produce json
 // @Param req body dto.LoginReq true "登录请求"

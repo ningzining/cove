@@ -9,15 +9,17 @@ import (
 )
 
 const (
-	RoleAdmin = "admin" // 管理员角色 Code
-	RoleUser  = "user"  // 普通用户角色 Code
+	AdminRoleCode      = "admin"       // 管理员角色
+	AdminRoleName      = "管理员"         // 管理员角色名称
+	NormalUserRoleCode = "normal_user" // 普通用户角色
+	NormalUserRoleName = "普通用户"        // 普通用户角色名称
 )
 
 type Role struct {
 	ID        int64          `json:"-" gorm:"autoIncrement;primaryKey"`
-	RoleID    string         `json:"role_id" gorm:"varchar(36);unique;not null;comment:角色ID"`
-	Code      string         `json:"code" gorm:"varchar(100);uniqueIndex;not null;comment:角色标识"`
-	Name      string         `json:"name" gorm:"varchar(255);not null;comment:角色名称"`
+	RoleID    string         `json:"id" gorm:"type:varchar(64);unique;not null;comment:角色ID"`
+	Code      string         `json:"code" gorm:"type:varchar(64);not null;comment:角色标识"`
+	Name      string         `json:"name" gorm:"type:varchar(255);not null;comment:角色名称"`
 	Status    EnabledStatus  `json:"status" gorm:"not null;default:1;comment:状态,1:启用,2:禁用"`
 	CreatedAt time.Time      `json:"created_at" gorm:"comment:创建时间"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"comment:更新时间"`

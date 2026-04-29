@@ -1,0 +1,18 @@
+{
+    "100000": "Internal server error",
+    "100001": "Parameter binding exception",
+    "100002": "Invalid parameter exception",
+    "100003": "Database operation exception, please contact administrator to resolve",
+    "100004": "Token signature exception, please login again later",
+    "100005": "Invalid token, please login again later",
+    "100006": "Token expired exception, please login again later",
+    "100007": "Account not authenticated, please login again later",
+    "100008": "Account not authorized, please contact administrator to get permission",
+    "101000": "Phone or password error, please login again later",
+    "101001": "Account disabled, please contact administrator to enable",
+    "102000": "Role code already exists, cannot repeat create",
+    "102001": "Role name already exists, cannot repeat create",
+    "102002": "Role does not exist",
+    "102003": "Role is used by user, cannot be deleted",
+    "102004": "Built-in role, cannot be operated"
+}

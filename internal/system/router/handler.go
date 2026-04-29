@@ -1,29 +1,13 @@
 package router
 
-import (
-	"github.com/gin-gonic/gin"
-	"github.com/ningzining/cove/pkg/rest/middleware"
+const (
+	CreateAction = "create"
+	DeleteAction = "delete"
+	UpdateAction = "update"
+	ReadAction   = "read"
 )
 
 const (
-	ActionCreate = "create"
-	ActionDelete = "delete"
-	ActionUpdate = "update"
-	ActionRead   = "read"
+	UserResource = "user"
+	RoleResource = "role"
 )
-
-const (
-	ResourceUser = "user"
-	ResourceRole = "role"
-)
-
-type ResourceAction struct {
-	Resource string
-	Action   string
-}
-
-func registerRouter(resource ResourceAction, group *gin.RouterGroup, method string, relativePath string, handlers ...gin.HandlerFunc) gin.IRoutes {
-	return group.
-		Use(middleware.AuthZ(resource.Resource, resource.Action)).
-		Handle(method, relativePath, handlers...)
-}

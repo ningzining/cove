@@ -22,17 +22,17 @@ const (
 type EnabledStatus int8
 
 const (
-	Enabled  EnabledStatus = 1
-	Disabled EnabledStatus = 2
+	Enabled  EnabledStatus = 1 // 启用
+	Disabled EnabledStatus = 2 // 禁用
 )
 
 type User struct {
 	ID        int64          `json:"-" gorm:"autoIncrement;primaryKey"`
-	UserID    string         `json:"user_id" gorm:"varchar(36);unique;not null;comment:用户ID"`
-	Nickname  string         `json:"nickname" gorm:"varchar(255);not null;comment:昵称"`
-	Phone     string         `json:"phone" gorm:"varchar(20);not null;comment:手机号"`
-	Password  string         `json:"-" gorm:"varchar(255);not null;comment:密码"`
-	Email     string         `json:"email" gorm:"varchar(255);comment:邮箱"`
+	UserID    string         `json:"id" gorm:"type:varchar(64);unique;not null;comment:用户ID"`
+	Nickname  string         `json:"nickname" gorm:"type:varchar(255);not null;comment:昵称"`
+	Phone     string         `json:"phone" gorm:"type:varchar(20);not null;comment:手机号"`
+	Password  string         `json:"-" gorm:"type:varchar(255);not null;comment:密码"`
+	Email     string         `json:"email" gorm:"type:varchar(255);comment:邮箱"`
 	Status    EnabledStatus  `json:"status" gorm:"not null;default:1;comment:状态,1:启用,2:禁用"`
 	CreatedAt time.Time      `json:"created_at" gorm:"comment:创建时间"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"comment:更新时间"`

@@ -10,6 +10,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func PageOk(c *gin.Context, data interface{}, total int64) {
+	OK(c, pageData{
+		List:  data,
+		Total: total,
+	})
+}
+
 func OK(c *gin.Context, data interface{}) {
 	r := Default.Clone()
 	r.SetCode(http.StatusOK)
