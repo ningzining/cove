@@ -273,24 +273,49 @@ func (s *RoleService) Page(req *dto.RolePageReq) ([]*model.Role, int64, error) {
 		log.Err(err).Any("req", req).Msg("db error")
 		return nil, 0, xerr.New(xerr.ErrDB)
 	}
+	// 加载角色资源关联
+	roleIds := make([]string, 0, len(roles))
+	for _, role := range roles {
+		roleIds = append(roleIds, role.RoleID)
+	}
+	var roleResources []model.RoleResource
+	if err = s.DB.Where("role_id IN ?", roleIds).Find(&roleResources).Error; err != nil {
+		log.Err(err).Any("role_ids", roleIds).Msg("db error")
+		return nil, 0, xerr.New(xerr.ErrDB)
+	}
+	resourceIds := make([]string, 0, len(roleResources))
+	for _, v := range roleResources {
+		resourceIds = append(resourceIds, v.ResourceID)
+	}
+	var resources []model.Resource
+	if err = s.DB.Where("resource_id IN ?", resourceIds).Find(&resources).Error; err != nil {
+		log.Err(err).Any("resource_ids", resourceIds).Msg("db error")
+		return nil, 0, xerr.New(xerr.ErrDB)
+	}
+	resourceMap := make(map[string]model.Resource)
+	for _, v := range resources {
+		resourceMap[v.ResourceID] = v
+	}
+
+	// 按 role_id 分组
+	roleResourceMap := make(map[string][]model.Resource)
+	for _, r := range roleResources {
+		resource, ok := resourceMap[r.ResourceID]
+		if !ok {
+			continue
+		}
+		roleResourceMap[r.RoleID] = append(roleResourceMap[r.RoleID], resource)
+	}
+	// 合并角色资源关联
+	for _, role := range roles {
+		if resources, ok := roleResourceMap[role.RoleID]; ok {
+			role.Resources = resources
+		}
+	}
 	return roles, total, nil
 }
 
-// RoleWithPermissions 带权限信息的角色
-type RoleWithPermissions struct {
-	*model.Role
-	Permissions []RolePermission `json:"permissions,omitempty"`
-}
-
-// RolePermission 角色权限
-type RolePermission struct {
-	ResourceID string   `json:"resource_id"`
-	Code       string   `json:"code"`
-	Name       string   `json:"name"`
-	Actions    []string `json:"actions"`
-}
-
-func (s *RoleService) Get(id string) (*RoleWithPermissions, error) {
+func (s *RoleService) Get(id string) (*model.Role, error) {
 	var role model.Role
 	err := s.DB.Where("role_id = ?", id).First(&role).Error
 	if err != nil {
@@ -300,52 +325,23 @@ func (s *RoleService) Get(id string) (*RoleWithPermissions, error) {
 		log.Err(err).Str("id", id).Msg("db error")
 		return nil, xerr.New(xerr.ErrDB)
 	}
-
-	result := &RoleWithPermissions{Role: &role}
-
-	// 从 Casbin 读取策略
-	enforcer := casbin.Enforcer()
-	if enforcer != nil {
-		policies, _ := enforcer.GetFilteredPolicy(0, id)
-		if len(policies) > 0 {
-			// 按 resource code 分组
-			resourceActions := make(map[string][]string)
-			for _, p := range policies {
-				if len(p) >= 3 {
-					resourceCode := p[1]
-					action := p[2]
-					resourceActions[resourceCode] = append(resourceActions[resourceCode], action)
-				}
-			}
-
-			// 查询 Resource 表获取详情
-			if len(resourceActions) > 0 {
-				codes := make([]string, 0, len(resourceActions))
-				for code := range resourceActions {
-					codes = append(codes, code)
-				}
-
-				var resources []*model.Resource
-				err = s.DB.Where("code IN ?", codes).Find(&resources).Error
-				if err != nil {
-					log.Err(err).Any("codes", codes).Msg("query resources failed")
-				} else {
-					for _, res := range resources {
-						if actions, ok := resourceActions[res.Code]; ok {
-							result.Permissions = append(result.Permissions, RolePermission{
-								ResourceID: res.ResourceID,
-								Code:       res.Code,
-								Name:       res.Name,
-								Actions:    actions,
-							})
-						}
-					}
-				}
-			}
-		}
+	var roleResources []model.RoleResource
+	if err = s.DB.Where("role_id = ?", id).Find(&roleResources).Error; err != nil {
+		log.Err(err).Str("role_id", id).Msg("db error")
+		return nil, xerr.New(xerr.ErrDB)
 	}
+	resourceIds := make([]string, 0, len(roleResources))
+	for _, v := range roleResources {
+		resourceIds = append(resourceIds, v.ResourceID)
+	}
+	var resources []model.Resource
+	if err = s.DB.Where("resource_id IN ?", resourceIds).Find(&resources).Error; err != nil {
+		log.Err(err).Any("resource_ids", resourceIds).Msg("db error")
+		return nil, xerr.New(xerr.ErrDB)
+	}
+	role.Resources = resources
 
-	return result, nil
+	return &role, nil
 }
 
 func (s *RoleService) Option() ([]*model.Role, error) {

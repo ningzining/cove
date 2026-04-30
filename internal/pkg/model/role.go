@@ -21,6 +21,7 @@ type Role struct {
 	Code      string         `json:"code" gorm:"type:varchar(64);not null;comment:角色标识"`
 	Name      string         `json:"name" gorm:"type:varchar(255);not null;comment:角色名称"`
 	Status    EnabledStatus  `json:"status" gorm:"not null;default:1;comment:状态,1:启用,2:禁用"`
+	Resources []Resource     `json:"resources" gorm:"-"`
 	CreatedAt time.Time      `json:"created_at" gorm:"comment:创建时间"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"comment:更新时间"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index;comment:删除时间"`
