@@ -19,7 +19,7 @@ func TestGenerate(t *testing.T) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
 		},
 	}
-	tokenString, err := Generate(claims, "cove-secret-key-change-in-production")
+	tokenString, err := Sign(claims, "cove-secret-key-change-in-production")
 	if err != nil {
 		t.Fatal(err)
 	}

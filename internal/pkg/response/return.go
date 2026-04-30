@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"github.com/ningzining/cove/pkg/xerr"
+	"github.com/ningzining/cove/internal/pkg/xerr"
 	"github.com/rs/zerolog/log"
 )
 
 func PageOk(c *gin.Context, data interface{}, total int64) {
 	OK(c, pageData{
-		List:  data,
+		Data:  data,
 		Total: total,
 	})
 }
@@ -31,6 +31,8 @@ func Error(c *gin.Context, err error) {
 	var msg string
 	if m := t(c, strconv.Itoa(code), templateData); m != "" {
 		msg = m
+	} else {
+		msg = err.Error()
 	}
 	r := Default.Clone()
 	r.SetCode(code)

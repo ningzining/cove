@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/ningzining/cove/internal/pkg/model"
+	"github.com/ningzining/cove/internal/pkg/xerr"
 	"github.com/ningzining/cove/internal/system/service/dto"
 	"github.com/ningzining/cove/internal/system/svc"
-	"github.com/ningzining/cove/pkg/model"
-	"github.com/ningzining/cove/pkg/token"
-	"github.com/ningzining/cove/pkg/xerr"
+	"github.com/ningzining/cove/pkg/core/token"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -65,7 +65,7 @@ func (a *Auth) Login(req *dto.LoginReq) (*dto.LoginResp, error) {
 			Issuer:    a.ctx.Config.Name,
 		},
 	}
-	tokenString, err := token.Generate(claims, a.ctx.Config.Jwt.Key)
+	tokenString, err := token.Sign(claims, a.ctx.Config.Jwt.Key)
 	if err != nil {
 		log.Error().
 			Err(err).

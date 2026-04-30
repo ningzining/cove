@@ -1,8 +1,8 @@
 package dto
 
 import (
+	"github.com/ningzining/cove/internal/pkg/model"
 	"github.com/ningzining/cove/pkg/core/request"
-	"github.com/ningzining/cove/pkg/model"
 )
 
 type RoleCreateReq struct {

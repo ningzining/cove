@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ningzining/cove/pkg/rest/response"
-	"github.com/ningzining/cove/pkg/token"
-	"github.com/ningzining/cove/pkg/xerr"
+	"github.com/ningzining/cove/internal/pkg/response"
+	"github.com/ningzining/cove/internal/pkg/xerr"
+	"github.com/ningzining/cove/pkg/core/token"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,15 +19,8 @@ const (
 )
 
 // AuthN JWT 认证中间件
-func AuthN(cfg *token.Config) gin.HandlerFunc {
+func AuthN(key string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cfg == nil {
-			log.Error().Msg("token config not set")
-			response.Error(c, xerr.New(xerr.ErrUnauthorized))
-			c.Abort()
-			return
-		}
-
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			log.Error().Msg("no auth header")
@@ -36,16 +29,11 @@ func AuthN(cfg *token.Config) gin.HandlerFunc {
 			return
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			log.Error().Msg("invalid auth header")
-			response.Error(c, xerr.New(xerr.ErrUnauthorized))
-			c.Abort()
-			return
-		}
+		// 从请求头中取出 token
+		var tokenStr string
+		fmt.Sscanf(authHeader, "Bearer %s", &tokenStr)
 
-		tokenStr := parts[1]
-		claims, err := token.Parse(tokenStr, cfg.Key)
+		claims, err := token.Parse(tokenStr, key)
 		if err != nil {
 			log.Error().Err(err).Str("token", tokenStr).Msg("parse token failed")
 			response.Error(c, xerr.New(xerr.ErrTokenInvalid))
@@ -66,13 +54,4 @@ func AuthN(cfg *token.Config) gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-func GetClaimsFromContext(c *gin.Context) (*token.CustomMapClaims, bool) {
-	claims, ok1 := c.Get(string(ClaimsContextKey))
-	if !ok1 {
-		return nil, false
-	}
-	cl, ok := claims.(*token.CustomMapClaims)
-	return cl, ok
 }

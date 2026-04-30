@@ -14,11 +14,6 @@ func New(code int) *Error {
 	return &Error{Code: code}
 }
 
-// WithTemplateDate 设置错误的模板数据.
-func (e *Error) WithTemplateDate(templateData map[string]interface{}) {
-	e.TemplateDate = templateData
-}
-
 // Error 实现 error 接口中的 `Error` 方法.
 func (e *Error) Error() string {
 	return fmt.Sprintf("code: %d template: %v", e.Code, e.TemplateDate)

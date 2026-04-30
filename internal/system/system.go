@@ -1,11 +1,11 @@
 package system
 
 import (
+	"github.com/ningzining/cove/internal/pkg/rest"
 	"github.com/ningzining/cove/internal/system/config"
 	"github.com/ningzining/cove/internal/system/router"
 	"github.com/ningzining/cove/pkg/core/conf"
 	"github.com/ningzining/cove/pkg/core/zlog"
-	"github.com/ningzining/cove/pkg/rest"
 	"github.com/spf13/cobra"
 
 	_ "github.com/ningzining/cove/internal/system/docs"

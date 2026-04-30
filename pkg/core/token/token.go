@@ -18,23 +18,23 @@ type CustomMapClaims struct {
 	jwt.RegisteredClaims
 }
 
-func Generate(claims jwt.Claims, signingKey string) (string, error) {
+func Sign(claims jwt.Claims, key string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(signingKey))
+	tokenString, err := token.SignedString([]byte(key))
 	if err != nil {
 		return "", err
 	}
 	return tokenString, nil
 }
 
-func Parse(tokenString string, signingKey string) (*CustomMapClaims, error) {
+func Parse(tokenString, key string) (*CustomMapClaims, error) {
 	claims := &CustomMapClaims{}
 	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		// 验证签名算法
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(signingKey), nil
+		return []byte(key), nil
 	})
 	if err != nil {
 		return nil, err

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ningzining/cove/pkg/rest/middleware"
+	"github.com/ningzining/cove/pkg/core/middleware"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,7 +25,13 @@ func NewServer(cfg *Config) *Server {
 	// 创建gin引擎
 	engine := gin.New()
 	// 安装中间件
-	middleware.Setup(engine)
+	engine.Use(middleware.Recovery()).
+		Use(middleware.RequestId()).
+		Use(middleware.Logger()).
+		Use(middleware.NoCache).
+		Use(middleware.Cors).
+		Use(middleware.Secure).
+		Use(middleware.I18n())
 
 	return &Server{config: cfg, engine: engine}
 }

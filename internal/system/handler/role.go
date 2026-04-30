@@ -2,10 +2,10 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/ningzining/cove/internal/pkg/response"
+	"github.com/ningzining/cove/internal/pkg/xerr"
 	"github.com/ningzining/cove/internal/system/service"
 	"github.com/ningzining/cove/internal/system/service/dto"
-	"github.com/ningzining/cove/pkg/rest/response"
-	"github.com/ningzining/cove/pkg/xerr"
 	"github.com/rs/zerolog/log"
 )
 

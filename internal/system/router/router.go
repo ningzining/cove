@@ -5,15 +5,15 @@ import (
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/ningzining/cove/internal/pkg/middleware"
+	"github.com/ningzining/cove/internal/pkg/model"
+	"github.com/ningzining/cove/internal/pkg/response"
 	"github.com/ningzining/cove/internal/system/config"
 	"github.com/ningzining/cove/internal/system/handler"
 	"github.com/ningzining/cove/internal/system/service"
 	"github.com/ningzining/cove/internal/system/svc"
 	"github.com/ningzining/cove/pkg/core/casbin"
-	"github.com/ningzining/cove/pkg/model"
-	"github.com/ningzining/cove/pkg/rest/middleware"
-	"github.com/ningzining/cove/pkg/rest/response"
-	"github.com/ningzining/cove/pkg/store"
+	"github.com/ningzining/cove/pkg/core/store"
 	"github.com/rs/zerolog/log"
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
@@ -68,12 +68,12 @@ func setupBizRouter(g *gin.RouterGroup, cfg *config.Config, db *gorm.DB) {
 		roleHandler := handler.NewRole(roleService)
 		{
 			v1 := g.Group("/api/v1/role")
-			v1.Use(middleware.AuthN(&cfg.Jwt))
+			v1.Use(middleware.AuthN(cfg.Jwt.Key))
 			v1.GET("/option", roleHandler.Option)
 		}
 		{
 			v1 := g.Group("/api/v1/role")
-			v1.Use(middleware.AuthN(&cfg.Jwt))
+			v1.Use(middleware.AuthN(cfg.Jwt.Key))
 			v1.POST("", middleware.AuthZ(RoleResource, CreateAction), roleHandler.Create)
 			v1.DELETE("", middleware.AuthZ(RoleResource, DeleteAction), roleHandler.Delete)
 			v1.PUT("/:id", middleware.AuthZ(RoleResource, UpdateAction), roleHandler.Update)
@@ -84,7 +84,7 @@ func setupBizRouter(g *gin.RouterGroup, cfg *config.Config, db *gorm.DB) {
 	}
 	{
 		v1 := g.Group("/api/v1")
-		v1.Use(middleware.AuthN(&cfg.Jwt))
+		v1.Use(middleware.AuthN(cfg.Jwt.Key))
 	}
 }
 

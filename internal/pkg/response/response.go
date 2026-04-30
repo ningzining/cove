@@ -6,6 +6,11 @@ type response struct {
 	Data interface{} `json:"data"`
 }
 
+type pageData struct {
+	Data  interface{} `json:"data"`
+	Total int64       `json:"total"`
+}
+
 var Default = &response{}
 
 func (r *response) SetCode(code int) {
@@ -22,9 +27,4 @@ func (r *response) SetData(data interface{}) {
 
 func (r *response) Clone() response {
 	return *r
-}
-
-type pageData struct {
-	List  interface{} `json:"list"`
-	Total int64       `json:"total"`
 }
