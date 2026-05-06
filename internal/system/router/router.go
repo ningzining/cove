@@ -13,7 +13,7 @@ import (
 	"github.com/ningzining/cove/internal/system/service"
 	"github.com/ningzining/cove/internal/system/svc"
 	"github.com/ningzining/cove/pkg/core/casbin"
-	"github.com/ningzining/cove/pkg/core/store"
+	"github.com/ningzining/cove/pkg/core/storage"
 	"github.com/rs/zerolog/log"
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
@@ -21,18 +21,22 @@ import (
 )
 
 func MustSetup(r *gin.Engine, cfg *config.Config) {
-	db := store.MustNew(&cfg.DB)
+	db := storage.MustNew(&cfg.DB)
+
 	// 初始化casbin
 	if err := casbin.Setup(db); err != nil {
 		log.Fatal().Err(err).Msg("init casbin failed")
 	}
+
 	// 初始化数据库
 	initDatabase(db)
 
 	// 注册路由组
 	g := r.Group("")
+
 	// 注册系统路由
 	setupSysRouter(g)
+
 	// 注册业务路由
 	setupBizRouter(g, cfg, db)
 }
@@ -41,15 +45,18 @@ func MustSetup(r *gin.Engine, cfg *config.Config) {
 func setupSysRouter(g *gin.RouterGroup) {
 	// 注册pprof路由
 	pprof.Register(g)
+
 	// 注册健康检查路由
 	g.GET("/healthz", func(ctx *gin.Context) {
 		log.Info().Msg("healthz function called")
 		response.OK(ctx, nil)
 	})
+
 	// 仅在开发模式下 注册swagger路由
 	if gin.Mode() != gin.ReleaseMode {
 		g.GET("/swagger/system/*any", ginswagger.WrapHandler(swaggerfiles.NewHandler(), ginswagger.InstanceName("system")))
 	}
+
 	// 注册静态文件路由
 	g.Static("/static", "./static")
 }

@@ -49,4 +49,5 @@ func run() {
 	router.MustSetup(server.Engine(), c)
 
 	server.Start()
+	server.Shutdown()
 }

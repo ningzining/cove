@@ -19,19 +19,7 @@ func AuthZ(resource string, action string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		userID := userClaims.UserID
-
-		path := c.FullPath()
-
-		enforcer := casbin.Enforcer()
-		if enforcer == nil {
-			log.Error().Msg("casbin enforcer not initialized")
-			response.Error(c, xerr.New(xerr.ErrForbidden))
-			c.Abort()
-			return
-		}
-
-		allowed, err := enforcer.Enforce(userID, resource, action)
+		allowed, err := casbin.Enforcer().Enforce(userClaims.UserID, resource, action)
 		if err != nil {
 			log.Error().Err(err).Msg("check permission failed")
 			response.Error(c, xerr.New(xerr.ErrForbidden))
@@ -41,8 +29,8 @@ func AuthZ(resource string, action string) gin.HandlerFunc {
 
 		if !allowed {
 			log.Warn().
-				Str("path", path).
-				Str("user_id", userID).
+				Str("path", c.FullPath()).
+				Str("user_id", userClaims.UserID).
 				Str("resource", resource).
 				Str("action", action).
 				Msg("permission denied")
