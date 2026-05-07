@@ -16,17 +16,17 @@ import (
 )
 
 type Auth struct {
-	DB  *gorm.DB
+	db  *gorm.DB
 	ctx *svc.Context
 }
 
 func NewAuth(db *gorm.DB, ctx *svc.Context) *Auth {
-	return &Auth{DB: db, ctx: ctx}
+	return &Auth{db: db, ctx: ctx}
 }
 
 func (a *Auth) Login(req *dto.LoginReq) (*dto.LoginResp, error) {
 	var user model.User
-	err := a.DB.Model(&model.User{}).Where("phone = ?", req.Phone).First(&user).Error
+	err := a.db.Model(&model.User{}).Where("phone = ?", req.Phone).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn().

@@ -20,4 +20,8 @@ var (
 	ErrRoleNotExist      = 102002 // 角色不存在
 	ErrRoleInUse         = 102003 // 角色已被用户使用，无法删除
 	ErrRoleCannotOperate = 102004 // 内置角色，不能操作
+
+	ErrUserPhoneExist    = 103000 // 手机号已存在
+	ErrUserNotExist      = 103001 // 用户不存在
+	ErrUserCannotOperate = 103002 // 内置用户，不能操作
 )

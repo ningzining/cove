@@ -46,6 +46,15 @@ definitions:
     required:
     - ids
     type: object
+  dto.RoleSimpleResp:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   dto.RoleUpdateReq:
     properties:
       name:
@@ -64,6 +73,113 @@ definitions:
       status:
         $ref: '#/definitions/model.EnabledStatus'
     type: object
+  dto.UserCreateReq:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      nickname:
+        maxLength: 255
+        minLength: 1
+        type: string
+      password:
+        maxLength: 20
+        minLength: 6
+        type: string
+      phone:
+        maxLength: 20
+        minLength: 1
+        type: string
+      role_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - nickname
+    - password
+    - phone
+    type: object
+  dto.UserDeleteReq:
+    properties:
+      ids:
+        items:
+          type: string
+        type: array
+    required:
+    - ids
+    type: object
+  dto.UserResetPasswordReq:
+    properties:
+      new_password:
+        maxLength: 20
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    type: object
+  dto.UserResp:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      nickname:
+        type: string
+      phone:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/dto.RoleSimpleResp'
+        type: array
+      status:
+        $ref: '#/definitions/model.EnabledStatus'
+      updated_at:
+        type: string
+    type: object
+  dto.UserUpdateReq:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      nickname:
+        maxLength: 255
+        minLength: 1
+        type: string
+      phone:
+        maxLength: 20
+        minLength: 1
+        type: string
+      role_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - nickname
+    - phone
+    type: object
+  dto.UserUpdateStatusReq:
+    properties:
+      status:
+        $ref: '#/definitions/model.EnabledStatus'
+    required:
+    - status
+    type: object
+  model.Action:
+    enum:
+    - read
+    - full
+    type: string
+    x-enum-comments:
+      FullAction: 全部操作
+      ReadAction: 只读操作
+    x-enum-descriptions:
+    - 只读操作
+    - 全部操作
+    x-enum-varnames:
+    - ReadAction
+    - FullAction
   model.EnabledStatus:
     enum:
     - 1
@@ -79,6 +195,21 @@ definitions:
     x-enum-varnames:
     - Enabled
     - Disabled
+  model.Resource:
+    properties:
+      action:
+        $ref: '#/definitions/model.Action'
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   model.Role:
     properties:
       code:
@@ -89,6 +220,10 @@ definitions:
         type: string
       name:
         type: string
+      resources:
+        items:
+          $ref: '#/definitions/model.Resource'
+        type: array
       status:
         $ref: '#/definitions/model.EnabledStatus'
       updated_at:
@@ -96,7 +231,7 @@ definitions:
     type: object
   response.pageData:
     properties:
-      list: {}
+      data: {}
       total:
         type: integer
     type: object
@@ -315,4 +450,210 @@ paths:
       summary: 角色选项
       tags:
       - 角色
+  /api/v1/user:
+    delete:
+      consumes:
+      - application/json
+      description: 删除用户
+      parameters:
+      - description: 删除用户请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserDeleteReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 删除用户
+      tags:
+      - 用户
+    get:
+      consumes:
+      - application/json
+      description: 分页查询用户
+      parameters:
+      - in: query
+        name: nickname
+        type: string
+      - in: query
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        minimum: 1
+        name: page_size
+        type: integer
+      - in: query
+        name: phone
+        type: string
+      - enum:
+        - 1
+        - 2
+        format: int32
+        in: query
+        name: status
+        type: integer
+        x-enum-comments:
+          Disabled: 禁用
+          Enabled: 启用
+        x-enum-descriptions:
+        - 启用
+        - 禁用
+        x-enum-varnames:
+        - Enabled
+        - Disabled
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.pageData'
+                  - properties:
+                      List:
+                        items:
+                          $ref: '#/definitions/dto.UserResp'
+                        type: array
+                    type: object
+              type: object
+      summary: 分页查询用户
+      tags:
+      - 用户
+    post:
+      consumes:
+      - application/json
+      description: 创建用户
+      parameters:
+      - description: 创建用户请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 创建用户
+      tags:
+      - 用户
+  /api/v1/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户详情
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResp'
+              type: object
+      summary: 获取用户详情
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      description: 更新用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新用户请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 更新用户
+      tags:
+      - 用户
+  /api/v1/user/{id}/password/reset:
+    put:
+      consumes:
+      - application/json
+      description: 重置用户密码
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 重置密码请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserResetPasswordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 重置用户密码
+      tags:
+      - 用户
+  /api/v1/user/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 更新用户状态
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新用户状态请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserUpdateStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 更新用户状态
+      tags:
+      - 用户
 swagger: "2.0"

@@ -14,17 +14,17 @@ import (
 )
 
 type RoleService struct {
-	DB  *gorm.DB
+	db  *gorm.DB
 	ctx *svc.Context
 }
 
 func NewRole(db *gorm.DB, ctx *svc.Context) *RoleService {
-	return &RoleService{DB: db, ctx: ctx}
+	return &RoleService{db: db, ctx: ctx}
 }
 
 func (s *RoleService) Create(req *dto.RoleCreateReq) error {
 	var err error
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	defer func() {
 		if err != nil {
 			tx.Rollback()
@@ -105,7 +105,7 @@ func (s *RoleService) Delete(req *dto.RoleDeleteReq) error {
 		return nil
 	}
 	var err error
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	defer func() {
 		if err != nil {
 			tx.Rollback()
@@ -156,7 +156,7 @@ func (s *RoleService) Delete(req *dto.RoleDeleteReq) error {
 
 func (s *RoleService) Update(req *dto.RoleUpdateReq) error {
 	var err error
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	defer func() {
 		if err != nil {
 			tx.Rollback()
@@ -254,7 +254,7 @@ func (s *RoleService) Update(req *dto.RoleUpdateReq) error {
 func (s *RoleService) Page(req *dto.RolePageReq) ([]*model.Role, int64, error) {
 	var roles []*model.Role
 	var total int64
-	err := s.DB.Model((*model.Role)(nil)).
+	err := s.db.Model((*model.Role)(nil)).
 		Scopes(search.MakeCondition(req)).
 		Count(&total).Error
 	if err != nil {
@@ -262,7 +262,7 @@ func (s *RoleService) Page(req *dto.RolePageReq) ([]*model.Role, int64, error) {
 		return nil, 0, xerr.New(xerr.ErrDB)
 	}
 
-	err = s.DB.Model((*model.Role)(nil)).
+	err = s.db.Model((*model.Role)(nil)).
 		Scopes(
 			search.MakeCondition(req),
 			search.Paginate(req.GetPage(), req.GetPageSize()),
@@ -279,7 +279,7 @@ func (s *RoleService) Page(req *dto.RolePageReq) ([]*model.Role, int64, error) {
 		roleIds = append(roleIds, role.RoleID)
 	}
 	var roleResources []model.RoleResource
-	if err = s.DB.Where("role_id IN ?", roleIds).Find(&roleResources).Error; err != nil {
+	if err = s.db.Where("role_id IN ?", roleIds).Find(&roleResources).Error; err != nil {
 		log.Err(err).Any("role_ids", roleIds).Msg("db error")
 		return nil, 0, xerr.New(xerr.ErrDB)
 	}
@@ -288,7 +288,7 @@ func (s *RoleService) Page(req *dto.RolePageReq) ([]*model.Role, int64, error) {
 		resourceIds = append(resourceIds, v.ResourceID)
 	}
 	var resources []model.Resource
-	if err = s.DB.Where("resource_id IN ?", resourceIds).Find(&resources).Error; err != nil {
+	if err = s.db.Where("resource_id IN ?", resourceIds).Find(&resources).Error; err != nil {
 		log.Err(err).Any("resource_ids", resourceIds).Msg("db error")
 		return nil, 0, xerr.New(xerr.ErrDB)
 	}
@@ -317,7 +317,7 @@ func (s *RoleService) Page(req *dto.RolePageReq) ([]*model.Role, int64, error) {
 
 func (s *RoleService) Get(id string) (*model.Role, error) {
 	var role model.Role
-	err := s.DB.Where("role_id = ?", id).First(&role).Error
+	err := s.db.Where("role_id = ?", id).First(&role).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, xerr.New(xerr.ErrRoleNotExist)
@@ -326,7 +326,7 @@ func (s *RoleService) Get(id string) (*model.Role, error) {
 		return nil, xerr.New(xerr.ErrDB)
 	}
 	var roleResources []model.RoleResource
-	if err = s.DB.Where("role_id = ?", id).Find(&roleResources).Error; err != nil {
+	if err = s.db.Where("role_id = ?", id).Find(&roleResources).Error; err != nil {
 		log.Err(err).Str("role_id", id).Msg("db error")
 		return nil, xerr.New(xerr.ErrDB)
 	}
@@ -335,7 +335,7 @@ func (s *RoleService) Get(id string) (*model.Role, error) {
 		resourceIds = append(resourceIds, v.ResourceID)
 	}
 	var resources []model.Resource
-	if err = s.DB.Where("resource_id IN ?", resourceIds).Find(&resources).Error; err != nil {
+	if err = s.db.Where("resource_id IN ?", resourceIds).Find(&resources).Error; err != nil {
 		log.Err(err).Any("resource_ids", resourceIds).Msg("db error")
 		return nil, xerr.New(xerr.ErrDB)
 	}
@@ -346,7 +346,7 @@ func (s *RoleService) Get(id string) (*model.Role, error) {
 
 func (s *RoleService) Option() ([]*model.Role, error) {
 	var roles []*model.Role
-	err := s.DB.Order("id DESC").Find(&roles).Error
+	err := s.db.Order("id DESC").Find(&roles).Error
 	if err != nil {
 		log.Err(err).Msg("db error")
 		return nil, xerr.New(xerr.ErrDB)
@@ -356,7 +356,7 @@ func (s *RoleService) Option() ([]*model.Role, error) {
 
 func (s *RoleService) UpdateStatus(req *dto.RoleUpdateStatusReq) error {
 	var err error
-	tx := s.DB.Begin()
+	tx := s.db.Begin()
 	defer func() {
 		if err != nil {
 			tx.Rollback()

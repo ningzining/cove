@@ -90,6 +90,21 @@ func setupBizRouter(g *gin.RouterGroup, cfg *config.Config, db *gorm.DB) {
 		}
 	}
 	{
+		userService := service.NewUser(db, ctx)
+		userHandler := handler.NewUser(userService)
+		{
+			v1 := g.Group("/api/v1/user")
+			v1.Use(middleware.AuthN(cfg.Jwt.Key))
+			v1.POST("", middleware.AuthZ(UserResource, CreateAction), userHandler.Create)
+			v1.DELETE("", middleware.AuthZ(UserResource, DeleteAction), userHandler.Delete)
+			v1.PUT("/:id", middleware.AuthZ(UserResource, UpdateAction), userHandler.Update)
+			v1.GET("/:id", middleware.AuthZ(UserResource, ReadAction), userHandler.Get)
+			v1.GET("", middleware.AuthZ(UserResource, ReadAction), userHandler.Page)
+			v1.PUT("/:id/status", middleware.AuthZ(UserResource, UpdateAction), userHandler.UpdateStatus)
+			v1.PUT("/:id/password/reset", middleware.AuthZ(UserResource, UpdateAction), userHandler.ResetPassword)
+		}
+	}
+	{
 		v1 := g.Group("/api/v1")
 		v1.Use(middleware.AuthN(cfg.Jwt.Key))
 	}
