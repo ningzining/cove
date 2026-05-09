@@ -71,6 +71,17 @@ func setupBizRouter(g *gin.RouterGroup, cfg *config.Config, db *gorm.DB) {
 		v1.POST("/login", authHandler.Login)
 	}
 	{
+		profileService := service.NewProfile(db)
+		profileHandler := handler.NewProfile(profileService)
+		{
+			v1 := g.Group("/api/v1/profile")
+			v1.Use(middleware.AuthN(cfg.Jwt.Key))
+			v1.GET("", profileHandler.Get)
+			v1.PUT("", profileHandler.Update)
+			v1.PUT("/password", profileHandler.UpdatePassword)
+		}
+	}
+	{
 		roleService := service.NewRole(db, ctx)
 		roleHandler := handler.NewRole(roleService)
 		{

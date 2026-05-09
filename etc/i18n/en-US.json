@@ -14,5 +14,10 @@
     "102001": "Role name already exists, cannot repeat create",
     "102002": "Role does not exist",
     "102003": "Role is used by user, cannot be deleted",
-    "102004": "Built-in role, cannot be operated"
+    "102004": "Built-in role, cannot be operated",
+    "103000": "Phone already exists",
+    "103001": "User does not exist",
+    "103002": "Built-in user, cannot be operated",
+    "104000": "Old password is incorrect",
+    "104001": "New password cannot be the same as old password"
 }

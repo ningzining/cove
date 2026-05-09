@@ -227,13 +227,13 @@ func (s *UserService) Update(req *dto.UserUpdateReq) error {
 	user.Nickname = req.Nickname
 	user.Phone = req.Phone
 	user.Email = req.Email
-	if err = tx.Save(&user).Error; err != nil {
+	if err = tx.Omit("password").Save(&user).Error; err != nil {
 		log.Err(err).Any("user", user).Msg("db error")
 		return xerr.New(xerr.ErrDB)
 	}
 
 	// 如果传了 role_ids，则更新角色
-	if req.RoleIDs != nil {
+	if len(req.RoleIDs) > 0 {
 		// 查询新角色是否存在
 		var newRoles []model.Role
 		if len(req.RoleIDs) > 0 {

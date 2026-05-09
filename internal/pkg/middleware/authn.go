@@ -55,3 +55,26 @@ func AuthN(key string) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// GetUserID 从 context 中获取当前用户的 UserID
+func GetUserID(c *gin.Context) (string, bool) {
+	claims, ok := c.Get(string(ClaimsContextKey))
+	if !ok {
+		return "", false
+	}
+	customClaims, ok := claims.(*token.CustomMapClaims)
+	if !ok {
+		return "", false
+	}
+	return customClaims.UserID, true
+}
+
+// MustGetUserID 从 context 中获取当前用户的 UserID，不存在则 panic
+func MustGetUserID(c *gin.Context) string {
+	userID, ok := GetUserID(c)
+	if !ok {
+		panic("user id not found in context")
+	}
+	return userID
+}
+

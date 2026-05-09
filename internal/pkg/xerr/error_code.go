@@ -24,4 +24,7 @@ var (
 	ErrUserPhoneExist    = 103000 // 手机号已存在
 	ErrUserNotExist      = 103001 // 用户不存在
 	ErrUserCannotOperate = 103002 // 内置用户，不能操作
+
+	ErrOldPasswordIncorrect = 104000 // 旧密码错误
+	ErrNewPasswordSame      = 104001 // 新旧密码不能相同
 )

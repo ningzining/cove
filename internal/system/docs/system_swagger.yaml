@@ -19,6 +19,53 @@ definitions:
         description: 登录token
         type: string
     type: object
+  dto.ProfileResp:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      nickname:
+        type: string
+      phone:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/dto.RoleSimpleResp'
+        type: array
+      status:
+        $ref: '#/definitions/model.EnabledStatus'
+      updated_at:
+        type: string
+    type: object
+  dto.ProfileUpdatePasswordReq:
+    properties:
+      new_password:
+        maxLength: 20
+        minLength: 6
+        type: string
+      old_password:
+        maxLength: 20
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  dto.ProfileUpdateReq:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      nickname:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - nickname
+    type: object
   dto.RoleCreateReq:
     properties:
       code:
@@ -273,6 +320,69 @@ paths:
       summary: 登录
       tags:
       - 认证
+  /api/v1/profile:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户的个人信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProfileResp'
+              type: object
+      summary: 获取个人信息
+      tags:
+      - 个人中心
+    put:
+      consumes:
+      - application/json
+      description: 更新当前登录用户的个人信息
+      parameters:
+      - description: 更新个人信息请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProfileUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 更新个人信息
+      tags:
+      - 个人中心
+  /api/v1/profile/password:
+    put:
+      consumes:
+      - application/json
+      description: 修改当前登录用户的密码
+      parameters:
+      - description: 修改密码请求
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProfileUpdatePasswordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.response'
+      summary: 修改密码
+      tags:
+      - 个人中心
   /api/v1/role:
     delete:
       consumes:
@@ -491,22 +601,6 @@ paths:
       - in: query
         name: phone
         type: string
-      - enum:
-        - 1
-        - 2
-        format: int32
-        in: query
-        name: status
-        type: integer
-        x-enum-comments:
-          Disabled: 禁用
-          Enabled: 启用
-        x-enum-descriptions:
-        - 启用
-        - 禁用
-        x-enum-varnames:
-        - Enabled
-        - Disabled
       produces:
       - application/json
       responses:
